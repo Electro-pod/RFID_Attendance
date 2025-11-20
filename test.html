@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Attendance Portal</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif; }
+body { min-height:100vh; overflow-x:hidden; background:#000214; color:white; }
+.page { display:none; min-height:100vh; padding-top:110px; text-align:center; position:relative; animation:fade 0.5s ease; }
+.active { display:block !important; }
+@keyframes fade { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+.space-bg { background: radial-gradient(circle at top, #0d1b40, #000428, #000214); }
+.star { width:2px; height:2px; background:white; position:absolute; opacity:0.7; animation: twinkle 2s infinite ease-in-out, floatStars 6s infinite ease-in-out; }
+@keyframes twinkle { 0%,100%{opacity:0.3;}50%{opacity:1;} }
+@keyframes floatStars { 0%{transform:translateY(0px);}50%{transform:translateY(-6px);}100%{transform:translateY(0px);} }
+
+.logo { width:130px; margin-bottom:20px; animation: float 3s infinite ease-in-out; }
+@keyframes float {0%{transform:translateY(0);}50%{transform:translateY(-8px);}100%{transform:translateY(0);}}
+
+button { padding:12px 28px; margin-top:20px; background:rgba(255,255,255,0.15); backdrop-filter:blur(8px); border-radius:14px; border:1px solid rgba(255,255,255,0.3); font-size:17px; color:white; cursor:pointer; transition:0.3s; box-shadow: 0 0 8px rgba(75,107,255,0.5), 0 0 20px rgba(75,107,255,0.3) inset; }
+button:hover { background: rgba(255,255,255,0.25); transform:scale(1.05); box-shadow: 0 0 15px rgba(75,107,255,0.7), 0 0 30px rgba(75,107,255,0.4) inset; }
+.back-btn { position:absolute; top:20px; left:20px; padding:8px 20px; background:rgba(255,255,255,0.1); border-radius:10px; border:1px solid rgba(255,255,255,0.35); }
+
+.glass-box { width:90%; max-width:420px; margin:0 auto; padding:30px; border-radius:20px; background:rgba(255,255,255,0.15); backdrop-filter:blur(25px); box-shadow:0 0 25px rgba(75,107,255,0.6),0 0 50px rgba(75,107,255,0.3) inset; text-align:left; border:1px solid rgba(255,255,255,0.4); }
+input { width:100%; padding:14px; margin-top:7px; margin-bottom:20px; background:rgba(255,255,255,0.17); border:none; color:white; border-radius:10px; font-size:16px; }
+input::placeholder { color: rgba(255,255,255,0.6); }
+input:focus { background:rgba(255,255,255,0.25); box-shadow:0 0 8px #4b6bff,0 0 15px rgba(75,107,255,0.3) inset; outline:none; }
+
+.login-btn { display:block; margin:0 auto; padding:14px 0; width:50%; border-radius:10px; background:#4b6bff; color:white; font-size:17px; cursor:pointer; transition:0.3s; box-shadow: 0 0 8px #4b6bff,0 0 20px rgba(75,107,255,0.4) inset; text-align:center; }
+.login-btn:hover { background:#3552d4; transform:scale(1.05); box-shadow:0 0 12px #4b6bff,0 0 25px rgba(75,107,255,0.5) inset; }
+
+.row { display:flex; justify-content:center; gap:25px; flex-wrap:wrap; margin-top:40px; }
+.card { width:200px; padding:25px; border-radius:18px; background:rgba(255,255,255,0.12); backdrop-filter:blur(15px); border:1px solid rgba(255,255,255,0.3); cursor:pointer; transition:0.3s; color:white; box-shadow: 0 0 8px #4b6bff,0 0 20px rgba(75,107,255,0.3) inset; animation: glowPulse 2.5s infinite alternate; text-align:center; font-weight:bold; font-size:18px; }
+.card:hover { transform:translateY(-8px) scale(1.05); background:rgba(255,255,255,0.25); box-shadow: 0 0 20px #4b6bff, 0 0 35px rgba(75,107,255,0.4) inset; }
+@keyframes glowPulse { 0% { box-shadow:0 0 8px #4b6bff,0 0 20px rgba(75,107,255,0.3) inset; } 50% { box-shadow:0 0 16px #4b6bff,0 0 30px rgba(75,107,255,0.4) inset; } 100% { box-shadow:0 0 8px #4b6bff,0 0 20px rgba(75,107,255,0.3) inset; } }
+
+table { width:90%; max-width:800px; margin:20px auto; border-radius:15px; overflow:hidden; background:rgba(255,255,255,0.15); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.4); color:white; }
+th, td { padding:14px; border-bottom:1px solid rgba(255,255,255,0.1); text-align:left; }
+th { cursor:pointer; user-select:none; background:rgba(255,255,255,0.25); }
+td.status { color:#00ff7f; font-weight:bold; text-align:center; }
+#searchBox { width:90%; max-width:400px; padding:12px; margin:0 auto 20px; display:block; border-radius:10px; border:none; background: rgba(255,255,255,0.17); color:white; }
+#exportBtn { display:block; margin:15px auto; padding:10px 20px; border-radius:10px; background:#4bff94; color:#000; font-weight:bold; cursor:pointer; transition:0.3s; box-shadow:0 0 10px #4bff94,0 0 20px rgba(75,107,255,0.3) inset; }
+#exportBtn:hover { transform:scale(1.05); box-shadow:0 0 15px #4bff94,0 0 25px rgba(75,107,255,0.4) inset; }
+</style>
+
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<body>
+<div id="welcome" class="page space-bg active">
+    <img src="LOGO_AAA copy.png" class="logo">
+    <h1>Welcome to Vignan Portal</h1>
+    <button onclick="go('login')">Continue</button>
+</div>
+
+<div id="login" class="page space-bg">
+    <button class="back-btn" onclick="go('welcome')">⟵ Back</button>
+    <h1 style="margin-bottom: 20px;">Login</h1>
+    <div class="glass-box">
+        <label>ID</label>
+        <input type="text" id="uid" placeholder="Enter ID">
+        <label>Password</label>
+        <input type="password" id="pwd" placeholder="Enter Password">
+        <button class="login-btn" onclick="checkLogin()">Login</button>
+    </div>
+</div>
+
+<div id="sections" class="page space-bg">
+    <button class="back-btn" onclick="logout()">⟵ Logout</button>
+    <h1 style="margin-bottom: 20px;">Select Section</h1>
+    <div class="row">
+        <div class="card" onclick="loadStudents('A')">Section A</div>
+        <div class="card" onclick="loadStudents('B')">Section B</div>
+        <div class="card" onclick="loadStudents('C')">Section C</div>
+    </div>
+</div>
+
+<div id="students" class="page space-bg">
+    <button class="back-btn" onclick="go('sections')">⟵ Back</button>
+    <h1 style="margin-bottom: 20px;">Student Attendance</h1>
+    <input type="text" id="searchBox" placeholder="Search by Name">
+    <table id="studentTable">
+        <thead>
+            <tr>
+                <th onclick="sortTable('name')">Name ⬍</th>
+                <th onclick="sortTable('date')">Date ⬍</th>
+                <th onclick="sortTable('time')">Time ⬍</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <button id="exportBtn" onclick="exportTableToExcel()">Export to Excel</button>
+</div>
+
+<script>
+const firebaseConfig = { databaseURL:"https://attendance-1edea-default-rtdb.firebaseio.com/" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const FIREBASE_URL = "attendance";
+
+function createStars(){
+    document.querySelectorAll('.page').forEach(page=>{
+        for(let i=0;i<130;i++){
+            let s=document.createElement("div");
+            s.className="star";
+            s.style.left=Math.random()*100 + "vw";
+            s.style.top=Math.random()*100 + "vh";
+            s.style.animationDuration=(2+Math.random()*3)+"s";
+            page.appendChild(s);
+        }
+    });
+}
+createStars();
+
+function go(p){ document.querySelectorAll('.page').forEach(e=>e.classList.remove('active')); document.getElementById(p).classList.add('active'); }
+function logout(){ document.getElementById("uid").value=""; document.getElementById("pwd").value=""; go("login"); }
+function checkLogin(){
+    let id=document.getElementById("uid").value;
+    let pw=document.getElementById("pwd").value;
+    if(id==="admin" && pw==="1234") go("sections");
+    else alert("Incorrect Login");
+}
+
+function loadStudents(section){
+    go("students");
+    const tableBody=document.querySelector("#studentTable tbody");
+    const searchBox=document.getElementById("searchBox");
+    searchBox.value="";
+    let studentsData=[];
+
+    db.ref(FIREBASE_URL).on("value", snap=>{
+        const allData = snap.val() || {};
+        studentsData = Object.values(allData).filter(s=>!s.section || s.section===section);
+        renderTable();
+    });
+
+    function renderTable(){
+        tableBody.innerHTML="";
+        // newest first
+        studentsData.slice().reverse().forEach(s=>{
+            const row=document.createElement("tr");
+            row.innerHTML=`
+                <td>${s.name}</td>
+                <td>${s.date||"--"}</td>
+                <td>${s.time||"--"}</td>
+                <td class="status">Present</td>
+            `;
+            tableBody.prepend(row);
+            // highlight effect
+            row.style.backgroundColor = "rgba(75,107,255,0.2)";
+            row.style.transition = "background-color 1.5s ease";
+            setTimeout(()=>{ row.style.backgroundColor="transparent"; }, 500);
+        });
+        filterTable();
+    }
+
+    function filterTable(){
+        const filter=searchBox.value.toLowerCase();
+        tableBody.querySelectorAll("tr").forEach(row=>{
+            const name=row.cells[0].textContent.toLowerCase();
+            row.style.display = name.includes(filter) ? "" : "none";
+        });
+    }
+    searchBox.oninput=filterTable;
+
+    window.sortTable=function(column){
+        studentsData.sort((a,b)=>{
+            let valA=a[column]||"";
+            let valB=b[column]||"";
+            return valA.localeCompare(valB);
+        });
+        renderTable();
+    }
+
+    window.exportTableToExcel=function(){
+        let ws_data=[["Name","Date","Time","Status"]];
+        studentsData.forEach(s=>ws_data.push([s.name,s.date||"--",s.time||"--","Present"]));
+        let wb=XLSX.utils.book_new();
+        let ws=XLSX.utils.aoa_to_sheet(ws_data);
+        XLSX.utils.book_append_sheet(wb,ws,"Attendance");
+        XLSX.writeFile(wb,`attendance_section_${section}.xlsx`);
+    }
+}
+</script>
+</body>
+</html>
